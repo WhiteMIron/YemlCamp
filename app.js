@@ -3,8 +3,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import CampGround from './models/campground.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 mongoose.connect('mongodb://localhost:27017/yelp-camp', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -18,17 +20,16 @@ db.once('open', () => {
 });
 const app = express();
 
-app.set('view-engine', 'ejs');
+app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
     res.send('home');
 });
 
-app.get('/makecampground', async (req, res) => {
-    const camp = new CampGround({ title: 'My Backyard', description: 'cheep camping!' });
-    await camp.save();
-    res.send(camp);
+app.get('/campgrounds', async (req, res) => {
+    const campgrounds = await CampGround.find({});
+    res.render('campgrounds/index', { campgrounds });
 });
 
 app.listen(3000, () => {
