@@ -7,8 +7,7 @@ import methodOverride from 'method-override';
 import ejsMate from 'ejs-mate';
 import ExpressError from './utils/ExpressError.js';
 import catchAsync from './utils/catchAsync.js';
-import { allowedNodeEnvironmentFlags } from 'process';
-import Joi from 'joi';
+import { campgroundSchema } from './schemas.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -31,6 +30,15 @@ app.engine('ejs', ejsMate);
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
+const validateCampground = (req, res, next) => {
+    const { error } = campgroundSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map((el) => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
 app.get('/', (req, res) => {
     res.send('home');
 });
@@ -49,21 +57,8 @@ app.get('/campgrounds/new', (req, res) => {
 
 app.post(
     '/campgrounds/new',
+    validateCampground,
     catchAsync(async (req, res, next) => {
-        const campgroundSchema = Joi.object({
-            campground: Joi.object({
-                title: Joi.string().required,
-                price: Joi.number().required().min(0),
-                image: Joi.string().required(),
-                location: Joi.string().required(),
-                description: Joi.string().required(),
-            }).required(),
-        });
-        const { error } = campgroundSchema.validate(req.body);
-        if (error) {
-            const msg = error.details.map((el) => el.message).join(',');
-            throw new ExpressError(msg, 400);
-        }
         const campground = new CampGround(req.body.campground);
         await campground.save();
         res.redirect(`/campgrounds/${campground.id}`);
@@ -89,6 +84,7 @@ app.get(
 
 app.put(
     '/campgrounds/:id',
+    validateCampground,
     catchAsync(async (req, res) => {
         const { id } = req.params;
         const campground = await CampGround.findByIdAndUpdate(id, { ...req.body.campground });
