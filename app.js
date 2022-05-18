@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import CampGround from './models/campground.js';
+import methodOverride from 'method-override';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +24,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
 
 app.get('/', (req, res) => {
     res.send('home');
@@ -46,6 +48,17 @@ app.post('/campgrounds/new', async (req, res) => {
 app.get('/campgrounds/:id', async (req, res) => {
     const campground = await CampGround.findById(req.params.id);
     res.render('campgrounds/show', { campground });
+});
+
+app.get('/campgrounds/:id/edit', async (req, res) => {
+    const campground = await CampGround.findById(req.params.id);
+    res.render('campgrounds/edit', { campground });
+});
+
+app.put('/campgrounds/:id', async (req, res) => {
+    const { id } = req.params;
+    const campground = await CampGround.findByIdAndUpdate(id, { ...req.body.campground });
+    res.redirect(`/campgrounds/${campground._id}`);
 });
 
 app.listen(3000, () => {
