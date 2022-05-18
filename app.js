@@ -8,7 +8,7 @@ import ejsMate from 'ejs-mate';
 import ExpressError from './utils/ExpressError.js';
 import catchAsync from './utils/catchAsync.js';
 import { allowedNodeEnvironmentFlags } from 'process';
-
+import Joi from 'joi';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -50,7 +50,20 @@ app.get('/campgrounds/new', (req, res) => {
 app.post(
     '/campgrounds/new',
     catchAsync(async (req, res, next) => {
-        if (!req.body.campground) throw new ExpressError('Invalid Campground Data', 400);
+        const campgroundSchema = Joi.object({
+            campground: Joi.object({
+                title: Joi.string().required,
+                price: Joi.number().required().min(0),
+                image: Joi.string().required(),
+                location: Joi.string().required(),
+                description: Joi.string().required(),
+            }).required(),
+        });
+        const { error } = campgroundSchema.validate(req.body);
+        if (error) {
+            const msg = error.details.map((el) => el.message).join(',');
+            throw new ExpressError(msg, 400);
+        }
         const campground = new CampGround(req.body.campground);
         await campground.save();
         res.redirect(`/campgrounds/${campground.id}`);
