@@ -56,7 +56,7 @@ app.get('/campgrounds/new', (req, res) => {
 });
 
 app.post(
-    '/campgrounds/new',
+    '/campgrounds',
     validateCampground,
     catchAsync(async (req, res, next) => {
         const campground = new CampGround(req.body.campground);
