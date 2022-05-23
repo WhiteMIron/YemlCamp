@@ -8,7 +8,7 @@ import methodOverride from 'method-override';
 import ejsMate from 'ejs-mate';
 import ExpressError from './utils/ExpressError.js';
 import catchAsync from './utils/catchAsync.js';
-import { campgroundSchema } from './schemas.js';
+import { campgroundSchema, reviewSchema } from './schemas.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -40,6 +40,17 @@ const validateCampground = (req, res, next) => {
         next();
     }
 };
+
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map((el) => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
+
 app.get('/', (req, res) => {
     res.send('home');
 });
@@ -104,6 +115,7 @@ app.delete(
 
 app.post(
     '/campgrounds/:id/reviews',
+    validateReview,
     catchAsync(async (req, res) => {
         const campground = await CampGround.findById(req.params.id);
         const review = new Review(req.body.review);
