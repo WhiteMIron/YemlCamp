@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import CampGround from './models/campground.js';
+import Review from './models/review.js';
 import methodOverride from 'method-override';
 import ejsMate from 'ejs-mate';
 import ExpressError from './utils/ExpressError.js';
@@ -98,6 +99,19 @@ app.delete(
         const { id } = req.params;
         await CampGround.findByIdAndDelete(id);
         res.redirect('/campgrounds');
+    })
+);
+
+app.post(
+    '/campgrounds/:id/reviews',
+    catchAsync(async (req, res) => {
+        const campground = await CampGround.findById(req.params.id);
+        const review = new Review(req.body.review);
+        campground.reviews.push(review);
+        await review.save();
+        await campground.save();
+
+        res.redirect(`/campgrounds/${campground._id}`);
     })
 );
 
