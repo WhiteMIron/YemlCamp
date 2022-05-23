@@ -80,7 +80,8 @@ app.post(
 app.get(
     '/campgrounds/:id',
     catchAsync(async (req, res) => {
-        const campground = await CampGround.findById(req.params.id);
+        const campground = await CampGround.findById(req.params.id).populate('reviews');
+        console.log(campground);
         res.render('campgrounds/show', { campground });
     })
 );
@@ -89,7 +90,6 @@ app.get(
     '/campgrounds/:id/edit',
     catchAsync(async (req, res) => {
         const campground = await CampGround.findById(req.params.id);
-        console.log(campground);
         res.render('campgrounds/edit', { campground });
     })
 );
